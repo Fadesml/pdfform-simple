@@ -1,0 +1,195 @@
+package ru.fadesml;
+
+import org.apache.fontbox.util.autodetect.FontFileFinder;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+
+	public static File getFont(String name) {
+		FontFileFinder fontFileFinder = new FontFileFinder();
+		final List<URI> uris = fontFileFinder.find();
+
+		for (URI uri : uris) {
+			File file = new File(uri);
+
+			System.out.println(file.getName());
+			if (file.getName()
+					.equals(name)) {
+				return file;
+			}
+		}
+
+		return null;
+	}
+
+	public static Map<String, String> getData() {
+		Map<String, String> data = new HashMap<>();
+		data.put(
+				"first_name",
+				"Andrew"
+		);
+		data.put(
+				"last_name",
+				"Буняк"
+		);
+		data.put(
+				"middle_name",
+				"Александрович"
+		);
+
+		data.put("null_field_example_key", "null_200");
+
+		return data;
+	}
+
+	public static void main(String[] args) throws IOException {
+		PDDocument pdfDocument = PDDocument.load(new File("examples/form.pdf"));
+		PDDocumentCatalog catalog = pdfDocument.getDocumentCatalog();
+		PDAcroForm acroForm = catalog.getAcroForm();
+
+		PDResources formResources = acroForm.getDefaultResources();
+		final PDType0Font load = PDType0Font.load(
+				pdfDocument,
+				new FileInputStream("examples/timesnewroman.ttf"),
+				false
+		);
+
+		System.out.println("LOAD: " + load);
+		formResources.put(
+				COSName.getPDFName("F0"),
+				load
+		);
+
+		for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {
+			PDPageContentStream contentStream = new PDPageContentStream(
+					pdfDocument,
+					pdfDocument.getPage(i),
+					PDPageContentStream.AppendMode.APPEND,
+					true,
+					false
+			);
+
+			/*
+			org.apache.pdfbox.pdmodel.PDPageContentStream <init> You are overwriting an existing content, you should use the append mode org.apache.fontbox.ttf.TTFSubsetter writeToStream
+			 */
+
+			contentStream.setFont(
+					load,
+					12
+			);
+
+			contentStream.beginText();
+			contentStream.showText("TEST TEXT WHAT THE FUCK IS GOING ON HERE");
+			contentStream.endText();
+
+			contentStream.close();
+		}
+
+		pdfDocument.save("examples/result/filled_form.pdf");
+
+
+		putArguments(
+				acroForm,
+				getData()
+		);
+
+		pdfDocument.close();
+	}
+
+	/*
+	Exception in thread "main" java.lang.IllegalArgumentException: U+0420 ('Ercyrillic') is not available in this font Helvetica (generic: ArialMT) encoding: StandardEncoding with differences
+	at org.apache.pdfbox.pdmodel.font.PDType1Font.encode(PDType1Font.java:406)
+	at org.apache.pdfbox.pdmodel.font.PDFont.encode(PDFont.java:316)
+	at org.apache.pdfbox.pdmodel.font.PDFont.getStringWidth(PDFont.java:345)
+	at org.apache.pdfbox.pdmodel.interactive.form.PlainTextFormatter.format(PlainTextFormatter.java:195)
+	at org.apache.pdfbox.pdmodel.interactive.form.AppearanceGeneratorHelper.insertGeneratedAppearance(AppearanceGeneratorHelper.java:422)
+	at org.apache.pdfbox.pdmodel.interactive.form.AppearanceGeneratorHelper.setAppearanceContent(AppearanceGeneratorHelper.java:288)
+	at org.apache.pdfbox.pdmodel.interactive.form.AppearanceGeneratorHelper.setAppearanceValue(AppearanceGeneratorHelper.java:170)
+	at org.apache.pdfbox.pdmodel.interactive.form.PDTextField.constructAppearances(PDTextField.java:263)
+	at org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField.applyChange(PDTerminalField.java:228)
+	at org.apache.pdfbox.pdmodel.interactive.form.PDTextField.setValue(PDTextField.java:218)
+	at ru.fadesml.Main.putArguments(Main.java:101)
+	at ru.fadesml.Main.main(Main.java:82)
+	 */
+	public static void putArguments(
+			PDAcroForm form,
+			Map<String, String> data
+	) {
+		if (form != null) {
+			System.out.println("Form is not null \n");
+			for (Map.Entry<String, String> entry : data.entrySet()) {
+				System.out.println("entry: " + entry.getKey());
+				final PDField field = form.getField(entry.getKey());
+
+				if (field != null) {
+					System.out.println("Field not null");
+					try {
+						System.out.println("Trying to set value and set default appearance");
+						PDTextField pdTextField = (PDTextField) field;
+//						pdTextField.setDefaultAppearance("/F0 0 Tf 0 g");
+						field.setValue(entry.getValue());
+						System.out.println("Field value: " + ((PDTextField) field).getValue());
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (IllegalArgumentException e) {
+						e.printStackTrace();
+						System.out.println("\n\n\n");
+					}
+				}
+				System.out.println("\n\n");
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

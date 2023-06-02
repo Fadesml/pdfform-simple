@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group = 'ru.fadesml'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.itextpdf:itext7-core:8.0.0")
+    implementation("org.apache.pdfbox:pdfbox:2.0.4")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.56")
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
