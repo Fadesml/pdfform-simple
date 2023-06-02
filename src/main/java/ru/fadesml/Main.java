@@ -1,5 +1,6 @@
 package ru.fadesml;
 
+import com.itextpdf.io.font.PdfEncodings;
 import org.apache.fontbox.util.autodetect.FontFileFinder;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
@@ -66,8 +67,11 @@ public class Main {
 
 		System.out.println("LOAD: " + load);
 		formResources.put(COSName.getPDFName("F0"), load);
+		acroForm.exportFDF().getCatalog().getFDF().setEncoding("cp1251");
 
 		putArguments(acroForm, getData());
+
+
 
 		pdfDocument.save("examples/result/filled_form.pdf");
 		pdfDocument.close();
@@ -91,7 +95,6 @@ public class Main {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-
 				}
 			}
 		}
